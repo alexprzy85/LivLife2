@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LivLife</title>
+    <!-- Tailwind CSS CDN for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" xintegrity="sha512-iecdLp3T8T4P5Bf99/54aBf4e9z5vK0vE/Qv1R8P8Xp+J8Jv0W4y3x6p9d0kF0e8x3p0q3Q2hR4v4p8r4n9S0f4Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #FDF2F8; /* Soft light pink */
+            color: #1F2937;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .game-container {
+            width: 100%;
+            max-width: 900px;
+            background: #FEF0F8; /* Slightly darker light pink */
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            border: 2px solid #FBCFEA; /* Pink border */
+            display: flex;
+            flex-direction: column;
+        }
+        .button-primary {
+            background-color: #F472B6; /* Pink */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            border: none;
+        }
+        .button-primary:hover {
+            background-color: #EC4899; /* Darker pink */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transform: translateY(-2px);
+        }
+        .stat-bar-container {
+            width: 100%;
+            background-color: #FBCFEA; /* Light pink */
+            border-radius: 9999px;
+            height: 0.75rem;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .stat-bar {
+            height: 100%;
+            transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out;
+        }
+        .input-text {
+            background: #FDF2F8;
+            border: 2px solid #FBCFEA;
+            color: #1F2937;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+        .input-text:focus {
+            outline: none;
+            border-color: #EC4899;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #FEF0F8;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+            width: 90%;
+            max-width: 500px;
+        }
+        .loading-spinner {
+            border: 4px solid #FBCFEA;
+            border-top: 4px solid #EC4899; /* Darker pink */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        #scenarios-container > div:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="game-container">
+        <!-- Start Screen -->
+        <div id="welcome-screen" class="p-8 md:p-12 text-center fade-in">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-[#EC4899]">LivLife</h1>
+            <p class="text-lg text-[#F472B6] mb-8">Embark on a unique life journey where an AI crafts your destiny. Your choices shape your career, social life, and overall happiness.</p>
+            <form id="start-form" class="space-y-6">
+                <div>
+                    <label for="name-input" class="block text-left text-sm font-medium mb-2">What is your name?</label>
+                    <input type="text" id="name-input" placeholder="Your Name" required class="input-text">
+                </div>
+                <div>
+                    <label for="skills-input" class="block text-left text-sm font-medium mb-2">What are your skills and hobbies? (e.g., coding, painting, hiking)</label>
+                    <textarea id="skills-input" placeholder="Enter a comma-separated list of your skills and hobbies." rows="3" required class="input-text"></textarea>
+                </div>
+                <div>
+                    <label for="aspirations-input" class="block text-left text-sm font-medium mb-2">What are your aspirations? (e.g., become a CEO, travel the world)</label>
+                    <textarea id="aspirations-input" placeholder="Describe your life goals." rows="3" required class="input-text"></textarea>
+                </div>
+                <button type="submit" class="button-primary w-full mt-4">Start Your Life</button>
+            </form>
+            <div id="loading-spinner" class="mt-8 hidden">
+                <div class="loading-spinner mx-auto"></div>
+                <p class="mt-4 text-[#F472B6]">Generating your life path...</p>
+            </div>
+        </div>
+
+        <!-- Main Game Screen -->
+        <div id="game-screen" class="hidden h-full flex flex-col p-4 md:p-8">
+            <!-- Stats Bar -->
+            <div class="flex flex-col md:flex-row justify-between items-center bg-[#FBCFEA] p-4 rounded-xl mb-6 shadow-lg">
+                <div class="stat-item flex-1 p-2">
+                    <div class="flex justify-between text-sm font-medium mb-1">
+                        <span>Career: <span id="career-stat-text">0</span></span>
+                        <span id="career-change" class="text-green-400 transition-opacity duration-500"></span>
+                    </div>
+                    <div class="stat-bar-container"><div id="career-bar" class="stat-bar bg-[#EC4899]"></div></div>
+                </div>
+                <div class="stat-item flex-1 p-2">
+                    <div class="flex justify-between text-sm font-medium mb-1">
+                        <span>Financial: <span id="financial-stat-text">0</span></span>
+                        <span id="financial-change" class="text-green-400 transition-opacity duration-500"></span>
+                    </div>
+                    <div class="stat-bar-container"><div id="financial-bar" class="stat-bar bg-[#FBBF24]"></div></div>
+                </div>
+                <div class="stat-item flex-1 p-2">
+                    <div class="flex justify-between text-sm font-medium mb-1">
+                        <span>Social: <span id="social-stat-text">0</span></span>
+                        <span id="social-change" class="text-green-400 transition-opacity duration-500"></span>
+                    </div>
+                    <div class="stat-bar-container"><div id="social-bar" class="stat-bar bg-[#A78BFA]"></div></div>
+                </div>
+                <div class="stat-item flex-1 p-2">
+                    <div class="flex justify-between text-sm font-medium mb-1">
+                        <span>Happiness: <span id="happiness-stat-text">0</span></span>
+                        <span id="happiness-change" class="text-green-400 transition-opacity duration-500"></span>
+                    </div>
+                    <div class="stat-bar-container"><div id="happiness-bar" class="stat-bar bg-[#F472B6]"></div></div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="flex-1 bg-[#FDF2F8] rounded-xl p-6 shadow-lg flex flex-col">
+                <div class="mb-4">
+                    <h2 class="text-xl font-bold text-[#EC4899]">Career: <span id="career-display" class="text-[#EC4899]"></span></h2>
+                </div>
+                <div id="scenarios-container" class="space-y-4 flex-1 overflow-y-auto">
+                    <!-- Scenarios will be dynamically added here -->
+                </div>
+            </div>
+
+            <!-- Input and Action Area -->
+            <div id="action-area" class="mt-6">
+                <form id="scenario-form" class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                    <input type="text" id="action-input" placeholder="Your decision or action..." required class="input-text flex-1">
+                    <button type="submit" class="button-primary md:w-auto flex-shrink-0">Make a Choice</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Custom Modal for Alerts -->
+        <div id="custom-modal" class="modal hidden">
+            <div class="modal-content text-center">
+                <p id="modal-text" class="text-lg text-[#1F2937] mb-6"></p>
+                <button onclick="closeModal()" class="button-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global game state. Will be synchronized with localStorage.
+        let gameState = {
+            name: '',
+            career: '',
+            skills: '',
+            aspirations: '',
+            scores: {
+                career: 50,
+                financial: 50,
+                social: 50,
+                happiness: 50
+            },
+            scenarios: [],
+            currentScenario: null,
+            isGameInitialized: false
+        };
+
+        // Load game state from localStorage on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedState = localStorage.getItem('livLifeState');
+            if (savedState) {
+                gameState = JSON.parse(savedState);
+                if (gameState.isGameInitialized) {
+                    document.getElementById('welcome-screen').classList.add('hidden');
+                    document.getElementById('game-screen').classList.remove('hidden');
+                    updateStatsUI();
+                    // Reload all past scenarios from localStorage
+                    gameState.scenarios.forEach(logEntry => displayScenario(logEntry, logEntry));
+                    // Generate a new scenario for the current game state
+                    generateNewScenario();
+                }
+            }
+        });
+
+        // Save game state to localStorage
+        function saveGameState() {
+            localStorage.setItem('livLifeState', JSON.stringify(gameState));
+        }
+
+        // Show a custom modal instead of alert()
+        function showModal(message) {
+            document.getElementById('modal-text').innerText = message;
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+
+        // Close the custom modal
+        function closeModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+        }
+
+        // Update the UI with the latest scores
+        function updateStatsUI() {
+            const scores = gameState.scores;
+            const stats = ['career', 'financial', 'social', 'happiness'];
+
+            // Update the main career display
+            document.getElementById('career-display').textContent = gameState.career;
+
+            stats.forEach(stat => {
+                const value = Math.max(0, Math.min(100, scores[stat] || 50));
+                const statText = document.getElementById(`${stat}-stat-text`);
+                const statBar = document.getElementById(`${stat}-bar`);
+
+                // Update the text value
+                statText.textContent = `${value}`;
+
+                // Update the bar width and color
+                statBar.style.width = `${value}%`;
+                if (value < 30) {
+                    statBar.style.backgroundColor = '#EF4444'; // Red
+                } else if (value < 60) {
+                    statBar.style.backgroundColor = '#F59E0B'; // Yellow
+                } else {
+                    statBar.style.backgroundColor = stat === 'career' ? '#EC4899' : stat === 'financial' ? '#8B5CF6' : stat === 'social' ? '#FBBF24' : '#F472B6';
+                }
+            });
+        }
+
+        // Display a new scenario and its outcome in the main content area
+        function displayScenario(scenario, outcome) {
+            const scenariosContainer = document.getElementById('scenarios-container');
+            const scenarioDiv = document.createElement('div');
+            scenarioDiv.classList.add('fade-in', 'pb-4', 'border-b', 'border-[#FBCFEA]');
+            scenarioDiv.innerHTML = `
+                <div class="mb-2">
+                    <p class="font-bold text-[#EC4899]">Scenario:</p>
+                    <p>${scenario.prompt}</p>
+                </div>
+                <div class="mb-2">
+                    <p class="font-bold text-[#EC4899]">Your Action:</p>
+                    <p>"${scenario.userAction}"</p>
+                </div>
+                <div class="mb-2">
+                    <p class="font-bold text-[#EC4899]">Outcome:</p>
+                    <p>${outcome.result}</p>
+                </div>
+                <div class="text-sm text-[#F472B6]">
+                    <p>
+                        Career: <span class="${outcome.changes.career >= 0 ? 'text-green-400' : 'text-red-400'}">${outcome.changes.career > 0 ? '+' : ''}${outcome.changes.career}</span>,
+                        Financial: <span class="${outcome.changes.financial >= 0 ? 'text-green-400' : 'text-red-400'}">${outcome.changes.financial > 0 ? '+' : ''}${outcome.changes.financial}</span>,
+                        Social: <span class="${outcome.changes.social >= 0 ? 'text-green-400' : 'text-red-400'}">${outcome.changes.social > 0 ? '+' : ''}${outcome.changes.social}</span>,
+                        Happiness: <span class="${outcome.changes.happiness >= 0 ? 'text-green-400' : 'text-red-400'}">${outcome.changes.happiness > 0 ? '+' : ''}${outcome.changes.happiness}</span>
+                    </p>
+                </div>
+            `;
+            scenariosContainer.prepend(scenarioDiv);
+        }
+
+        // Animate stat changes
+        function animateStatChange(stat, change) {
+            const statChangeSpan = document.getElementById(`${stat}-change`);
+            statChangeSpan.textContent = `${change > 0 ? '+' : ''}${change}`;
+            statChangeSpan.classList.remove('opacity-0');
+            statChangeSpan.classList.add('opacity-100');
+            setTimeout(() => {
+                statChangeSpan.classList.remove('opacity-100');
+                statChangeSpan.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        // Make an API call to a secure proxy
+        async function callGeminiAPI(prompt, retries = 3, delay = 1000) {
+            // This is a direct API call without a proxy.
+            const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyAS_zE_sEljupu485Z6URL_qGdAv_7eqRE";
+
+            const payload = {
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }]
+            };
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429 && i < retries - 1) {
+                            console.warn(`API call failed with status 429. Retrying in ${delay}ms...`);
+                            await new Promise(res => setTimeout(res, delay));
+                            delay *= 2;
+                            continue;
+                        }
+                        throw new Error(`API request failed with status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    return result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                } catch (error) {
+                    console.error("Gemini API call error:", error);
+                    if (i === retries - 1) {
+                        showModal(`Error: Failed to get a response from the AI. Please try again.
+                        Details: ${error.message}`);
+                        return null;
+                    }
+                }
+            }
+        }
+
+        // Game Logic
+
+        // Handle the start of the game
+        document.getElementById('start-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name-input').value;
+            const skills = document.getElementById('skills-input').value;
+            const aspirations = document.getElementById('aspirations-input').value;
+
+            document.getElementById('start-form').classList.add('hidden');
+            document.getElementById('loading-spinner').classList.remove('hidden');
+
+            const careerPrompt = `
+                Given the following user information, suggest a fitting career path for them. The response should be a single string containing only the career name, without any extra text, and be based on the provided details.
+
+                Name: ${name}
+                Skills & Hobbies: ${skills}
+                Aspirations: ${aspirations}
+
+                Example: "Data Scientist"
+                Example: "Forest Ranger"
+            `;
+
+            const careerResult = await callGeminiAPI(careerPrompt);
+
+            if (careerResult) {
+                // Initialize game state with user data
+                gameState = {
+                    name: name,
+                    career: careerResult.trim(),
+                    skills: skills,
+                    aspirations: aspirations,
+                    scores: {
+                        career: 50,
+                        financial: 50,
+                        social: 50,
+                        happiness: 50
+                    },
+                    scenarios: [],
+                    isGameInitialized: true
+                };
+
+                saveGameState(); // Save initial state to localStorage
+
+                document.getElementById('loading-spinner').classList.add('hidden');
+                document.getElementById('welcome-screen').classList.add('hidden');
+                document.getElementById('game-screen').classList.remove('hidden');
+                
+                updateStatsUI();
+                generateNewScenario();
+            } else {
+                document.getElementById('start-form').classList.remove('hidden');
+                document.getElementById('loading-spinner').classList.add('hidden');
+            }
+        });
+
+        // Generate and display a new scenario
+        async function generateNewScenario() {
+            const prompt = `
+                You are a sophisticated AI running a life simulation game. The user is a player named "${gameState.name}" with the career of "${gameState.career}".
+
+                Create a short, engaging scenario for the player to react to. The scenario should involve a decision or a free-text response. It can be related to their career, social life, or both. The persona of the person they interact with should be distinct and have a clear personality (e.g., a demanding boss, a laid-back friend, a quirky stranger).
+
+                Provide the scenario text in a single paragraph. Do not provide options. The player will provide a free-text response.
+                Example Scenario: "Your demanding boss, Mr. Thompson, approaches your desk. 'I need you to work late tonight to finish the project. Your performance review depends on this. What do you do?'"
+                Example Scenario: "Your eccentric friend, Alex, calls you with an unusual invitation. 'I'm starting a new club for people who believe in lizard people. We're meeting at the park tonight. Do you want to come?'"
+            `;
+
+            const scenarioText = await callGeminiAPI(prompt);
+            if (scenarioText) {
+                gameState.currentScenario = { prompt: scenarioText.trim() };
+                const newScenarioDiv = document.createElement('div');
+                newScenarioDiv.classList.add('p-4', 'bg-gray-700', 'rounded-lg', 'fade-in');
+                newScenarioDiv.innerHTML = `<p>${scenarioText.trim()}</p>`;
+                document.getElementById('scenarios-container').prepend(newScenarioDiv);
+
+                // Scroll to the top of the scenario container
+                const container = document.getElementById('scenarios-container');
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        // Handle the user's action
+        document.getElementById('scenario-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userAction = document.getElementById('action-input').value;
+            const currentScenario = gameState.currentScenario;
+            
+            if (!currentScenario) {
+                showModal("Please wait for a new scenario to load.");
+                return;
+            }
+
+            document.getElementById('action-input').disabled = true;
+            document.getElementById('scenario-form').querySelector('button').disabled = true;
+
+            currentScenario.userAction = userAction;
+
+            const resolvePrompt = `
+                You are a sophisticated AI running a life simulation game. The user, named "${gameState.name}", is a "${gameState.career}". The player's current stats are: Career: ${gameState.scores.career}, Financial: ${gameState.scores.financial}, Social: ${gameState.scores.social}, Happiness: ${gameState.scores.happiness}.
+
+                The previous scenario was: "${currentScenario.prompt}"
+                The player's action was: "${userAction}"
+
+                Please provide an outcome for this scenario. The outcome should be a short paragraph that explains what happened based on their action. Then, you MUST provide a JSON object with the changes to the user's stats (career, financial, social, happiness). The changes should be integers and can be positive or negative. The JSON object MUST be the last part of your response and should only contain the stat changes. Do not include any other text after the JSON.
+
+                Example response:
+                "You decide to work late and impress your boss. He is pleased and gives you a bonus. However, you miss your friend's birthday party, making them sad."
+                {"career": 15, "financial": 10, "social": -5, "happiness": -5}
+            `;
+
+            const outcomeText = await callGeminiAPI(resolvePrompt);
+
+            if (outcomeText) {
+                let result = outcomeText;
+                let changes = { career: 0, financial: 0, social: 0, happiness: 0 };
+                let jsonString = '';
+
+                // Extract the JSON object from the end of the response
+                const jsonStartIndex = outcomeText.lastIndexOf('{');
+                if (jsonStartIndex !== -1) {
+                    jsonString = outcomeText.substring(jsonStartIndex);
+                    result = outcomeText.substring(0, jsonStartIndex).trim();
+                    try {
+                        changes = JSON.parse(jsonString);
+                    } catch (e) {
+                        console.error("Failed to parse JSON from API response:", e);
+                        // Fallback to default changes
+                        changes = { career: 5, financial: 5, social: 5, happiness: 5 };
+                    }
+                }
+
+                // Update game state and display results
+                gameState.scores.career = Math.max(0, Math.min(100, gameState.scores.career + (changes.career || 0)));
+                gameState.scores.financial = Math.max(0, Math.min(100, gameState.scores.financial + (changes.financial || 0)));
+                gameState.scores.social = Math.max(0, Math.min(100, gameState.scores.social + (changes.social || 0)));
+                gameState.scores.happiness = Math.max(0, Math.min(100, gameState.scores.happiness + (changes.happiness || 0)));
+
+                // Add the resolved scenario to the log
+                const scenarioLogEntry = {
+                    ...currentScenario,
+                    result,
+                    changes
+                };
+                gameState.scenarios.push(scenarioLogEntry);
+
+                saveGameState(); // Save updated state to localStorage
+
+                displayScenario(currentScenario, { result, changes });
+                updateStatsUI();
+                animateStatChange('career', changes.career);
+                animateStatChange('financial', changes.financial);
+                animateStatChange('social', changes.social);
+                animateStatChange('happiness', changes.happiness);
+                document.getElementById('action-input').value = '';
+                document.getElementById('action-input').disabled = false;
+                document.getElementById('scenario-form').querySelector('button').disabled = false;
+
+                // Generate the next scenario immediately
+                generateNewScenario();
+            } else {
+                document.getElementById('action-input').disabled = false;
+                document.getElementById('scenario-form').querySelector('button').disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
