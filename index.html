@@ -112,6 +112,21 @@
         #scenarios-container > div:last-child {
             border-bottom: none;
         }
+        .suggested-response-button {
+            background-color: #FBCFEA;
+            color: #EC4899;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            border: 1px solid #FBCFEA;
+        }
+        .suggested-response-button:hover {
+            background-color: #EC4899;
+            color: white;
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -150,35 +165,35 @@
                         <span>Career: <span id="career-stat-text">0</span></span>
                         <span id="career-change" class="text-green-400 transition-opacity duration-500"></span>
                     </div>
-                    <div class="stat-bar-container"><div id="career-bar" class="stat-bar bg-[#EC4899]"></div></div>
+                    <div class="stat-bar-container"><div id="career-bar" class="stat-bar bg-violet-500"></div></div>
                 </div>
                 <div class="stat-item flex-1 p-2">
                     <div class="flex justify-between text-sm font-medium mb-1">
                         <span>Financial: <span id="financial-stat-text">0</span></span>
                         <span id="financial-change" class="text-green-400 transition-opacity duration-500"></span>
                     </div>
-                    <div class="stat-bar-container"><div id="financial-bar" class="stat-bar bg-[#FBBF24]"></div></div>
+                    <div class="stat-bar-container"><div id="financial-bar" class="stat-bar bg-green-500"></div></div>
                 </div>
                 <div class="stat-item flex-1 p-2">
                     <div class="flex justify-between text-sm font-medium mb-1">
                         <span>Social: <span id="social-stat-text">0</span></span>
                         <span id="social-change" class="text-green-400 transition-opacity duration-500"></span>
                     </div>
-                    <div class="stat-bar-container"><div id="social-bar" class="stat-bar bg-[#A78BFA]"></div></div>
+                    <div class="stat-bar-container"><div id="social-bar" class="stat-bar bg-pink-500"></div></div>
                 </div>
                 <div class="stat-item flex-1 p-2">
                     <div class="flex justify-between text-sm font-medium mb-1">
                         <span>Happiness: <span id="happiness-stat-text">0</span></span>
                         <span id="happiness-change" class="text-green-400 transition-opacity duration-500"></span>
                     </div>
-                    <div class="stat-bar-container"><div id="happiness-bar" class="stat-bar bg-[#F472B6]"></div></div>
+                    <div class="stat-bar-container"><div id="happiness-bar" class="stat-bar bg-yellow-500"></div></div>
                 </div>
             </div>
 
             <!-- Main Content Area -->
-            <div class="flex-1 bg-[#FDF2F8] rounded-xl p-6 shadow-lg flex flex-col">
+            <div class="flex-1 bg-white rounded-xl p-6 shadow-lg flex flex-col">
                 <div class="mb-4">
-                    <h2 class="text-xl font-bold text-[#EC4899]">Career: <span id="career-display" class="text-[#EC4899]"></span></h2>
+                    <h2 class="text-xl font-bold text-violet-600">Career: <span id="career-display" class="text-violet-600"></span></h2>
                 </div>
                 <div id="scenarios-container" class="space-y-4 flex-1 overflow-y-auto">
                     <!-- Scenarios will be dynamically added here -->
@@ -187,6 +202,9 @@
 
             <!-- Input and Action Area -->
             <div id="action-area" class="mt-6">
+                <div id="suggested-responses" class="mb-4 flex flex-wrap gap-2">
+                    <!-- Suggested response buttons will be dynamically added here -->
+                </div>
                 <form id="scenario-form" class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
                     <input type="text" id="action-input" placeholder="Your decision or action..." required class="input-text flex-1">
                     <button type="submit" class="button-primary md:w-auto flex-shrink-0">Make a Choice</button>
@@ -197,7 +215,7 @@
         <!-- Custom Modal for Alerts -->
         <div id="custom-modal" class="modal hidden">
             <div class="modal-content text-center">
-                <p id="modal-text" class="text-lg text-[#1F2937] mb-6"></p>
+                <p id="modal-text" class="text-lg text-gray-900 mb-6"></p>
                 <button onclick="closeModal()" class="button-primary">OK</button>
             </div>
         </div>
@@ -220,6 +238,8 @@
             currentScenario: null,
             isGameInitialized: false
         };
+
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyAS_zE_sEljupu485Z6URL_qGdAv_7eqRE";
 
         // Load game state from localStorage on page load
         document.addEventListener('DOMContentLoaded', () => {
@@ -277,7 +297,7 @@
                 } else if (value < 60) {
                     statBar.style.backgroundColor = '#F59E0B'; // Yellow
                 } else {
-                    statBar.style.backgroundColor = stat === 'career' ? '#EC4899' : stat === 'financial' ? '#8B5CF6' : stat === 'social' ? '#FBBF24' : '#F472B6';
+                    statBar.style.backgroundColor = stat === 'career' ? '#8b5cf6' : stat === 'financial' ? '#22c55e' : stat === 'social' ? '#ec4899' : '#f59e0b';
                 }
             });
         }
@@ -286,26 +306,26 @@
         function displayScenario(scenario, outcome) {
             const scenariosContainer = document.getElementById('scenarios-container');
             const scenarioDiv = document.createElement('div');
-            scenarioDiv.classList.add('fade-in', 'pb-4', 'border-b', 'border-[#FBCFEA]');
+            scenarioDiv.classList.add('fade-in', 'pb-4', 'border-b', 'border-gray-300');
             scenarioDiv.innerHTML = `
                 <div class="mb-2">
-                    <p class="font-bold text-[#EC4899]">Scenario:</p>
+                    <p class="font-bold text-violet-600">Scenario:</p>
                     <p>${scenario.prompt}</p>
                 </div>
                 <div class="mb-2">
-                    <p class="font-bold text-[#EC4899]">Your Action:</p>
+                    <p class="font-bold text-violet-600">Your Action:</p>
                     <p>"${scenario.userAction}"</p>
                 </div>
                 <div class="mb-2">
-                    <p class="font-bold text-[#EC4899]">Outcome:</p>
+                    <p class="font-bold text-violet-600">Outcome:</p>
                     <p>${outcome.result}</p>
                 </div>
-                <div class="text-sm text-[#F472B6]">
+                <div class="text-sm text-gray-600">
                     <p>
-                        Career: <span class="${outcome.changes.career >= 0 ? 'text-green-400' : 'text-red-400'}">${outcome.changes.career > 0 ? '+' : ''}${outcome.changes.career}</span>,
-                        Financial: <span class="${outcome.changes.financial >= 0 ? 'text-green-400' : 'text-red-400'}">${outcome.changes.financial > 0 ? '+' : ''}${outcome.changes.financial}</span>,
-                        Social: <span class="${outcome.changes.social >= 0 ? 'text-green-400' : 'text-red-400'}">${outcome.changes.social > 0 ? '+' : ''}${outcome.changes.social}</span>,
-                        Happiness: <span class="${outcome.changes.happiness >= 0 ? 'text-green-400' : 'text-red-400'}">${outcome.changes.happiness > 0 ? '+' : ''}${outcome.changes.happiness}</span>
+                        Career: <span class="${outcome.changes.career >= 0 ? 'text-green-500' : 'text-red-500'}">${outcome.changes.career > 0 ? '+' : ''}${outcome.changes.career}</span>,
+                        Financial: <span class="${outcome.changes.financial >= 0 ? 'text-green-500' : 'text-red-500'}">${outcome.changes.financial > 0 ? '+' : ''}${outcome.changes.financial}</span>,
+                        Social: <span class="${outcome.changes.social >= 0 ? 'text-green-500' : 'text-red-500'}">${outcome.changes.social > 0 ? '+' : ''}${outcome.changes.social}</span>,
+                        Happiness: <span class="${outcome.changes.happiness >= 0 ? 'text-green-500' : 'text-red-500'}">${outcome.changes.happiness > 0 ? '+' : ''}${outcome.changes.happiness}</span>
                     </p>
                 </div>
             `;
@@ -323,12 +343,9 @@
                 statChangeSpan.classList.add('opacity-0');
             }, 2000);
         }
-
-        // Make an API call to a secure proxy
+        
+        // Make an API call to Gemini
         async function callGeminiAPI(prompt, retries = 3, delay = 1000) {
-            // This is a direct API call without a proxy.
-            const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyAS_zE_sEljupu485Z6URL_qGdAv_7eqRE";
-
             const payload = {
                 contents: [{
                     parts: [{
@@ -369,7 +386,15 @@
                 }
             }
         }
-
+        
+        // Handle suggested response button clicks
+        document.getElementById('suggested-responses').addEventListener('click', (e) => {
+            if (e.target.classList.contains('suggested-response-button')) {
+                document.getElementById('action-input').value = e.target.textContent.trim();
+                document.getElementById('scenario-form').dispatchEvent(new Event('submit'));
+            }
+        });
+        
         // Game Logic
 
         // Handle the start of the game
@@ -393,34 +418,40 @@
                 Example: "Forest Ranger"
             `;
 
-            const careerResult = await callGeminiAPI(careerPrompt);
+            try {
+                const careerResult = await callGeminiAPI(careerPrompt);
 
-            if (careerResult) {
-                // Initialize game state with user data
-                gameState = {
-                    name: name,
-                    career: careerResult.trim(),
-                    skills: skills,
-                    aspirations: aspirations,
-                    scores: {
-                        career: 50,
-                        financial: 50,
-                        social: 50,
-                        happiness: 50
-                    },
-                    scenarios: [],
-                    isGameInitialized: true
-                };
+                if (careerResult) {
+                    // Initialize game state with user data
+                    gameState = {
+                        name: name,
+                        career: careerResult.trim(),
+                        skills: skills,
+                        aspirations: aspirations,
+                        scores: {
+                            career: 50,
+                            financial: 50,
+                            social: 50,
+                            happiness: 50
+                        },
+                        scenarios: [],
+                        isGameInitialized: true
+                    };
 
-                saveGameState(); // Save initial state to localStorage
+                    saveGameState(); // Save initial state to localStorage
 
-                document.getElementById('loading-spinner').classList.add('hidden');
-                document.getElementById('welcome-screen').classList.add('hidden');
-                document.getElementById('game-screen').classList.remove('hidden');
-                
-                updateStatsUI();
-                generateNewScenario();
-            } else {
+                    document.getElementById('loading-spinner').classList.add('hidden');
+                    document.getElementById('welcome-screen').classList.add('hidden');
+                    document.getElementById('game-screen').classList.remove('hidden');
+                    
+                    updateStatsUI();
+                    generateNewScenario();
+                } else {
+                    document.getElementById('start-form').classList.remove('hidden');
+                    document.getElementById('loading-spinner').classList.add('hidden');
+                }
+            } catch (error) {
+                showModal(`Error: ${error}`);
                 document.getElementById('start-form').classList.remove('hidden');
                 document.getElementById('loading-spinner').classList.add('hidden');
             }
@@ -431,24 +462,49 @@
             const prompt = `
                 You are a sophisticated AI running a life simulation game. The user is a player named "${gameState.name}" with the career of "${gameState.career}".
 
-                Create a short, engaging scenario for the player to react to. The scenario should involve a decision or a free-text response. It can be related to their career, social life, or both. The persona of the person they interact with should be distinct and have a clear personality (e.g., a demanding boss, a laid-back friend, a quirky stranger).
+                Create a short, engaging scenario for the player to react to. The scenario should involve a decision. Then provide 3-4 suggested response options. The personas of the people they interact with should be distinct and have a clear personality.
 
-                Provide the scenario text in a single paragraph. Do not provide options. The player will provide a free-text response.
-                Example Scenario: "Your demanding boss, Mr. Thompson, approaches your desk. 'I need you to work late tonight to finish the project. Your performance review depends on this. What do you do?'"
-                Example Scenario: "Your eccentric friend, Alex, calls you with an unusual invitation. 'I'm starting a new club for people who believe in lizard people. We're meeting at the park tonight. Do you want to come?'"
+                Provide the response as a single JSON object with two keys: "scenario" (a string for the scenario text) and "options" (an array of strings for the suggested responses). Do not include any other text.
+
+                Example:
+                {
+                  "scenario": "Your demanding boss, Mr. Thompson, approaches your desk. 'I need you to work late tonight to finish the project. Your performance review depends on this. What do you do?'",
+                  "options": [
+                    "Stay late and finish the project.",
+                    "Tell him you have a prior commitment and will finish it in the morning.",
+                    "Suggest a different colleague who might be available to help."
+                  ]
+                }
             `;
 
             const scenarioText = await callGeminiAPI(prompt);
-            if (scenarioText) {
-                gameState.currentScenario = { prompt: scenarioText.trim() };
+            
+            // Clear previous suggested responses
+            const suggestedResponsesContainer = document.getElementById('suggested-responses');
+            suggestedResponsesContainer.innerHTML = '';
+
+            try {
+                const parsedResponse = JSON.parse(scenarioText);
+                gameState.currentScenario = { prompt: parsedResponse.scenario, options: parsedResponse.options };
                 const newScenarioDiv = document.createElement('div');
-                newScenarioDiv.classList.add('p-4', 'bg-gray-700', 'rounded-lg', 'fade-in');
-                newScenarioDiv.innerHTML = `<p>${scenarioText.trim()}</p>`;
+                newScenarioDiv.classList.add('p-4', 'bg-white', 'rounded-lg', 'fade-in');
+                newScenarioDiv.innerHTML = `<p>${parsedResponse.scenario}</p>`;
                 document.getElementById('scenarios-container').prepend(newScenarioDiv);
+
+                // Add suggested response buttons
+                parsedResponse.options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.classList.add('suggested-response-button');
+                    button.textContent = option;
+                    suggestedResponsesContainer.appendChild(button);
+                });
 
                 // Scroll to the top of the scenario container
                 const container = document.getElementById('scenarios-container');
                 container.scrollTop = container.scrollHeight;
+            } catch (error) {
+                console.error("Failed to parse AI response for scenario:", error);
+                showModal("Error: Failed to generate a scenario from the AI. Please try again.");
             }
         }
 
@@ -481,56 +537,62 @@
                 {"career": 15, "financial": 10, "social": -5, "happiness": -5}
             `;
 
-            const outcomeText = await callGeminiAPI(resolvePrompt);
+            try {
+                const outcomeText = await callGeminiAPI(resolvePrompt);
 
-            if (outcomeText) {
-                let result = outcomeText;
-                let changes = { career: 0, financial: 0, social: 0, happiness: 0 };
-                let jsonString = '';
+                if (outcomeText) {
+                    let result = outcomeText;
+                    let changes = { career: 0, financial: 0, social: 0, happiness: 0 };
+                    let jsonString = '';
 
-                // Extract the JSON object from the end of the response
-                const jsonStartIndex = outcomeText.lastIndexOf('{');
-                if (jsonStartIndex !== -1) {
-                    jsonString = outcomeText.substring(jsonStartIndex);
-                    result = outcomeText.substring(0, jsonStartIndex).trim();
-                    try {
-                        changes = JSON.parse(jsonString);
-                    } catch (e) {
-                        console.error("Failed to parse JSON from API response:", e);
-                        // Fallback to default changes
-                        changes = { career: 5, financial: 5, social: 5, happiness: 5 };
+                    // Extract the JSON object from the end of the response
+                    const jsonStartIndex = outcomeText.lastIndexOf('{');
+                    if (jsonStartIndex !== -1) {
+                        jsonString = outcomeText.substring(jsonStartIndex);
+                        result = outcomeText.substring(0, jsonStartIndex).trim();
+                        try {
+                            changes = JSON.parse(jsonString);
+                        } catch (e) {
+                            console.error("Failed to parse JSON from API response:", e);
+                            // Fallback to default changes
+                            changes = { career: 5, financial: 5, social: 5, happiness: 5 };
+                        }
                     }
+
+                    // Update game state and display results
+                    gameState.scores.career = Math.max(0, Math.min(100, gameState.scores.career + (changes.career || 0)));
+                    gameState.scores.financial = Math.max(0, Math.min(100, gameState.scores.financial + (changes.financial || 0)));
+                    gameState.scores.social = Math.max(0, Math.min(100, gameState.scores.social + (changes.social || 0)));
+                    gameState.scores.happiness = Math.max(0, Math.min(100, gameState.scores.happiness + (changes.happiness || 0)));
+
+                    // Add the resolved scenario to the log
+                    const scenarioLogEntry = {
+                        ...currentScenario,
+                        result,
+                        changes
+                    };
+                    gameState.scenarios.push(scenarioLogEntry);
+
+                    saveGameState(); // Save updated state to localStorage
+
+                    displayScenario(currentScenario, { result, changes });
+                    updateStatsUI();
+                    animateStatChange('career', changes.career);
+                    animateStatChange('financial', changes.financial);
+                    animateStatChange('social', changes.social);
+                    animateStatChange('happiness', changes.happiness);
+                    document.getElementById('action-input').value = '';
+                    document.getElementById('action-input').disabled = false;
+                    document.getElementById('scenario-form').querySelector('button').disabled = false;
+
+                    // Generate the next scenario immediately
+                    generateNewScenario();
+                } else {
+                    document.getElementById('action-input').disabled = false;
+                    document.getElementById('scenario-form').querySelector('button').disabled = false;
                 }
-
-                // Update game state and display results
-                gameState.scores.career = Math.max(0, Math.min(100, gameState.scores.career + (changes.career || 0)));
-                gameState.scores.financial = Math.max(0, Math.min(100, gameState.scores.financial + (changes.financial || 0)));
-                gameState.scores.social = Math.max(0, Math.min(100, gameState.scores.social + (changes.social || 0)));
-                gameState.scores.happiness = Math.max(0, Math.min(100, gameState.scores.happiness + (changes.happiness || 0)));
-
-                // Add the resolved scenario to the log
-                const scenarioLogEntry = {
-                    ...currentScenario,
-                    result,
-                    changes
-                };
-                gameState.scenarios.push(scenarioLogEntry);
-
-                saveGameState(); // Save updated state to localStorage
-
-                displayScenario(currentScenario, { result, changes });
-                updateStatsUI();
-                animateStatChange('career', changes.career);
-                animateStatChange('financial', changes.financial);
-                animateStatChange('social', changes.social);
-                animateStatChange('happiness', changes.happiness);
-                document.getElementById('action-input').value = '';
-                document.getElementById('action-input').disabled = false;
-                document.getElementById('scenario-form').querySelector('button').disabled = false;
-
-                // Generate the next scenario immediately
-                generateNewScenario();
-            } else {
+            } catch (error) {
+                showModal(`Error: ${error}`);
                 document.getElementById('action-input').disabled = false;
                 document.getElementById('scenario-form').querySelector('button').disabled = false;
             }
